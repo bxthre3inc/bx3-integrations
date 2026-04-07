@@ -1,0 +1,48 @@
+{
+  "name": "@bxthre3/bx3-web-components",
+  "version": "1.0.0",
+  "description": "BX3 Design System as framework-agnostic Web Components",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/bx3-components.min.js",
+  "files": [
+    "dist",
+    "cdn"
+  ],
+  "scripts": {
+    "build": "rollup -c && npm run minify",
+    "minify": "terser dist/bx3-components.js -o dist/bx3-components.min.js --source-map --compress --mangle",
+    "dev": "rollup -c -w",
+    "test": "wtr --watch",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "keywords": [
+    "web-components",
+    "design-system",
+    "ui",
+    "bx3",
+    "framework-agnostic"
+  ],
+  "peerDependencies": {},
+  "dependencies": {
+    "lit": "^3.0.0",
+    "@bxthre3/bx3-core": "^1.0.0"
+  },
+  "devDependencies": {
+    "@open-wc/testing": "^3.0.0",
+    "@web/dev-server": "^0.3.0",
+    "@web/test-runner": "^0.17.0",
+    "rollup": "^4.0.0",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "terser": "^5.0.0",
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bxthre3inc/bx3-integrations.git",
+    "directory": "packages/web-components"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "BX3 Design System",
+  "id": "com.bxthre3.bx3-figma",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "dist/ui.html",
+  "editorType": [
+    "figma",
+    "figjam"
+  ],
+  "permissions": [],
+  "networkAccess": {
+    "allowedDomains": [
+      "https://brodiblanco.zo.space",
+      "https://api.bxthre3.com"
+    ]
+  },
+  "menu": [
+    {
+      "name": "Open BX3 Library",
+      "command": "openLibrary"
+    },
+    {
+      "name": "Insert Component",
+      "command": "insertComponent"
+    },
+    {
+      "name": "Apply Theme",
+      "command": "applyTheme"
+    },
+    {
+      "separator": true
+    },
+    {
+      "name": "Sync with Code",
+      "command": "syncWithCode"
+    }
+  ]
+}

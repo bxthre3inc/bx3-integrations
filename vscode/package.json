@@ -1,0 +1,114 @@
+{
+  "name": "bx3-design-system",
+  "displayName": "BX3 Design System",
+  "description": "BX3 Design System integration for VS Code - autocomplete, snippets, and live preview",
+  "version": "1.0.0",
+  "publisher": "bxthre3",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Snippets",
+    "Other"
+  ],
+  "keywords": [
+    "bx3",
+    "design system",
+    "ui components",
+    "react",
+    "vue",
+    "android"
+  ],
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onLanguage:vue",
+    "onLanguage:kotlin"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "bx3.insertComponent",
+        "title": "BX3: Insert Component"
+      },
+      {
+        "command": "bx3.openDocs",
+        "title": "BX3: Open Documentation"
+      },
+      {
+        "command": "bx3.previewTheme",
+        "title": "BX3: Preview Theme"
+      },
+      {
+        "command": "bx3.generateTheme",
+        "title": "BX3: Generate Theme File"
+      },
+      {
+        "command": "bx3.syncWithFigma",
+        "title": "BX3: Sync with Figma"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "bx3.insertComponent",
+          "group": "bx3@1"
+        }
+      ]
+    },
+    "snippets": [
+      {
+        "language": "typescriptreact",
+        "path": "./snippets/react.json"
+      },
+      {
+        "language": "vue",
+        "path": "./snippets/vue.json"
+      },
+      {
+        "language": "kotlin",
+        "path": "./snippets/kotlin.json"
+      }
+    ],
+    "configuration": {
+      "title": "BX3 Design System",
+      "properties": {
+        "bx3.theme": {
+          "type": "string",
+          "default": "zospace",
+          "enum": ["agentos", "zospace", "vpc", "irrig8", "custom"],
+          "description": "Active BX3 theme"
+        },
+        "bx3.autoImport": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-import BX3 components on snippet insert"
+        },
+        "bx3.figmaFileKey": {
+          "type": "string",
+          "default": "",
+          "description": "Figma file key for design sync"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bxthre3inc/bx3-integrations.git",
+    "directory": "packages/vscode"
+  },
+  "license": "MIT"
+}

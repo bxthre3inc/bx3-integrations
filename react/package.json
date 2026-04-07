@@ -1,0 +1,26 @@
+{
+  "name": "@bxthre3/bx3-react",
+  "version": "1.0.0",
+  "description": "BX3 Design System for React",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc && rollup -c",
+    "test": "jest",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "dependencies": {
+    "@bxthre3/bx3-core": "^1.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bxthre3inc/bx3-integrations.git",
+    "directory": "packages/react"
+  }
+}
