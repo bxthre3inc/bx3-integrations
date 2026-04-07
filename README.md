@@ -2,142 +2,110 @@
 
 Multi-platform distribution of the BX3 Design System.
 
-## 📦 Packages
+## Status
 
-| Package | Platform | Status | Install |
-|---------|----------|--------|---------|
-| `@bxthre3/bx3-react` | React 18+ | ✅ | `npm i @bxthre3/bx3-react` |
-| `@bxthre3/bx3-vue` | Vue 3 | ✅ | `npm i @bxthre3/bx3-vue` |
-| `@bxthre3/bx3-web-components` | Web Components | ✅ | CDN or npm |
-| `@bxthre3/bx3-angular` | Angular 15+ | 🚧 | Coming Q2 2026 |
-| `bx3_design` (pub.dev) | Flutter | 🚧 | Coming Q2 2026 |
-| `bx3-design-ios` | SwiftUI | 🚧 | Coming Q2 2026 |
+| Platform | Status | Components | Tests | CI/CD |
+|----------|--------|------------|-------|-------|
+| **React** | ✅ Production Ready | 1 (Button) | ✅ Jest + RTL | ✅ GitHub Actions |
+| **Vue** | 🚧 Stubs Only | 0 | ❌ | ❌ |
+| **Python** | 🚧 Stubs Only | 0 | ❌ | ❌ |
+| **Rust** | 🚧 Stubs Only | 0 | ❌ | ❌ |
+| **Linux (.deb)** | 🚧 Stubs Only | 0 | N/A | ❌ |
+| **Web Components** | 🚧 Stubs Only | 0 | ❌ | ❌ |
 
-## 🔧 Developer Tools
+## Quick Start (React)
 
-| Tool | Platform | Status |
-|------|----------|--------|
-| **Figma Plugin** | Figma/FigJam | ✅ |
-| **VS Code Extension** | VS Code | ✅ |
-| **Storybook** | Web | ✅ |
-| **CLI** | Node.js | 🚧 Coming Q3 2026 |
+```bash
+npm install @bxthre3/bx3-react
+```
 
-## 🚀 Quick Start
-
-### React
 ```tsx
-import { BX3Button, BX3ThemeProvider } from '@bxthre3/bx3-react';
+import { BX3ThemeProvider, BX3Button, useBX3Theme } from '@bxthre3/bx3-react';
 
 function App() {
+  const { setTheme } = useBX3Theme();
+  
   return (
-    <BX3ThemeProvider theme="zospace">
-      <BX3Button variant="primary" onClick={() => console.log('clicked')}>
-        Get Started
+    <BX3ThemeProvider defaultTheme="zospace">
+      <BX3Button variant="primary" onClick={() => setTheme('agentos')}>
+        Switch to AgentOS Theme
       </BX3Button>
     </BX3ThemeProvider>
   );
 }
 ```
 
-### Vue
-```vue
-<template>
-  <BX3ThemeProvider theme="zospace">
-    <BX3Button variant="primary" @click="handleClick">
-      Get Started
-    </BX3Button>
-  </BX3ThemeProvider>
-</template>
+## Features
 
-<script setup>
-import { BX3Button, BX3ThemeProvider } from '@bxthre3/bx3-vue';
-</script>
+### Implemented
+
+| Feature | React | Vue | Python | Rust | Linux |
+|---------|-------|-----|--------|------|-------|
+| **Theme System** | ✅ | 🚧 | 🚧 | 🚧 | 🚧 |
+| **WCAG 2.1 AA** | ✅ | — | — | — | — |
+| **Accessibility Hooks** | ✅ | — | — | — | — |
+| **Storybook** | ✅ | — | — | — | — |
+| **Test Suite** | ✅ | — | — | — | — |
+| **TypeScript** | ✅ | 🚧 | — | — | — |
+
+### Available Now
+
+**React Components:**
+- `BX3Button` — Primary, secondary, ghost, danger variants with loading, disabled states
+- `BX3ThemeProvider` — Runtime theme switching (zospace, agentos, vpc, irrig8)
+- `useAccessibility` — Detect screen readers, reduced motion, high contrast
+
+**React Developer Tools:**
+- Storybook with a11y addon
+- Jest test suite with 70%+ coverage requirement
+- ESLint + TypeScript strict mode
+- Bundle size monitoring (<50KB gzipped)
+
+## Example Application
+
+See `examples/react-example/` for a working Vite + React demo.
+
+```bash
+cd examples/react-example
+npm install
+npm run dev
 ```
 
-### Web Components (CDN)
-```html
-<script type="module" src="https://unpkg.com/@bxthre3/bx3-web-components"></script>
+## Roadmap
 
-<bx3-theme-provider theme="zospace">
-  <bx3-button variant="primary">Get Started</bx3-button>
-</bx3-theme-provider>
-```
+### Phase 1 (Now) — React Production
+- [x] BX3Button with full variants
+- [x] Theme system
+- [x] Accessibility hooks
+- [x] Test suite
+- [ ] BX3Card, BX3Input, BX3Spinner (Week 2)
+- [ ] BX3Dialog, BX3Dropdown (Week 3)
 
-### Android (Kotlin)
-```kotlin
-import com.bxthre3.design.atoms.BX3Button
-import com.bxthre3.design.theme.BX3Theme
+### Phase 2 (Q2 2026) — Vue + Python
+- [ ] Port React components to Vue 3
+- [ ] Python Tkinter/PyQt/GTK backends
+- [ ] pytest test suite
 
-@Composable
-fun MyScreen() {
-    BX3Theme(variant = ThemeVariant.ZOSPACE) {
-        BX3Button(
-            text = "Get Started",
-            variant = BX3ButtonVariant.PRIMARY,
-            onClick = { /* action */ }
-        )
-    }
-}
-```
+### Phase 3 (Q3 2026) — Rust + Systems
+- [ ] Rust wgpu rendering
+- [ ] Linux .deb package with GTK theme
+- [ ] FFI bindings for Python/Node
 
-## 🎨 Theming
+### Phase 4 (Q4 2026) — DevTools
+- [ ] Figma plugin (code → design sync)
+- [ ] VS Code extension
+- [ ] CLI code generation
 
-All platforms support runtime theme switching:
+## License
 
-| Theme | Primary | Use Case |
-|-------|---------|----------|
-| `agentos` | `#1B5E20` (Green) | AI workforce platform |
-| `zospace` | `#7B1FA2` (Purple) | Personal dashboard |
-| `vpc` | `#004D40` (Teal) | Gaming/club platform |
-| `irrig8` | `#1565C0` (Blue) | Agriculture (reserved) |
+- **Core Components (atoms):** MIT License
+- **Premium Components (organisms, templates):** Commercial License — contact sales@bxthre3inc.com
 
-## ♿ Accessibility
+## Patent Notice
 
-All integrations include:
-- **WCAG 2.1 AA compliance**
-- **Screen reader detection** with dynamic UI adaptation
-- **Reduced motion support** via `prefers-reduced-motion`
-- **High contrast mode** via `prefers-contrast: high`
-- **RTL language support** (Arabic, Hebrew)
+The following innovations are patent-pending:
+- Runtime adaptive theming with accessibility awareness
+- Predictive input with UI context
+- Spatial drag-drop with similarity prediction
 
-## 💰 Licensing
-
-| Tier | Components | Price |
-|------|------------|-------|
-| **MIT** | Core atoms (Button, Text, Icon, etc.) | Free |
-| **Commercial** | Organisms, templates, pages | $15K/year/app |
-| **AI-Native** | PredictiveInput, AIWidget, CommandPalette | $35K/year/app |
-| **Enterprise** | Kanban, VirtualizedList, DataGrid | $50K/year/app |
-
-## 🔬 Patent-Pending Innovations
-
-| Innovation | Package | Patent Status |
-|------------|---------|---------------|
-| Predictive Input with UI Context | All | Filing 2026-05-15 |
-| Spatial Drag-Drop with Similarity | React, Vue, Web | Filing 2026-05-15 |
-| Windowed Rendering with Prefetch | All | Filing 2026-05-15 |
-| Intent-Aware AI Widget | All | Filing 2026-05-15 |
-| Temporal Urgency Encoding | All | Filed |
-
-## 📦 Package Sizes
-
-| Package | Minified | Gzipped |
-|---------|----------|---------|
-| @bxthre3/bx3-react | 45KB | 12KB |
-| @bxthre3/bx3-vue | 42KB | 11KB |
-| @bxthre3/bx3-web-components | 38KB | 10KB |
-| bx3_design (Flutter) | 120KB | N/A |
-
-## 🤝 Contributing
-
-Each package has its own repository under `bxthre3inc/bx3-integrations`.
-
-See individual package READMEs for development setup.
-
-## 📄 License
-
-See individual package LICENSE files. Core atoms are MIT. Premium components require commercial license.
-
----
-
-**BX3 Design System** — Built by [Bxthre3 Inc](https://github.com/bxthre3inc)
+Use of this software does not grant patent rights. Commercial licenses include patent coverage.

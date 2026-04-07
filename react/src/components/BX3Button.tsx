@@ -1,82 +1,154 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useBX3Theme } from '../hooks/useBX3Theme';
-import { BX3ButtonProps, BX3ButtonVariant } from '../types';
+import { useAccessibility } from '../hooks/useAccessibility';
+
+interface BX3ButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  size?: 'small' | 'medium' | 'large';
+  disabled?: boolean;
+  loading?: boolean;
+  fullWidth?: boolean;
+  type?: 'button' | 'submit' | 'reset';
+  ariaLabel?: string;
+  className?: string;
+}
 
 export const BX3Button: React.FC<BX3ButtonProps> = ({
   children,
-  variant = BX3ButtonVariant.PRIMARY,
-  size = 'md',
-  loading = false,
-  disabled = false,
   onClick,
-  ...props
+  variant = 'primary',
+  size = 'medium',
+  disabled = false,
+  loading = false,
+  fullWidth = false,
+  type = 'button',
+  ariaLabel,
+  className = ''
 }) => {
-  const { colors, isDark } = useBX3Theme();
-  const [isHovered, setIsHovered] = useState(false);
-  const [isPressed, setIsPressed] = useState(false);
+  const { theme, colors } = useBX3Theme();
+  const { prefersReducedMotion, highContrast } = useAccessibility();
+  const [pressed, setPressed] = useState(false);
 
-  const getVariantStyles = () => {
-    switch (variant) {
-      case BX3ButtonVariant.PRIMARY:
-        return {
-          background: colors.primary,
-          color: colors.onPrimary,
-          border: 'none',
-        };
-      case BX3ButtonVariant.SECONDARY:
-        return {
-          background: colors.surface,
-          color: colors.onSurface,
-          border: `1px solid ${colors.onSurfaceVariant}`,
-        };
-      case BX3ButtonVariant.GHOST:
-        return {
-          background: 'transparent',
-          color: colors.onSurface,
-          border: 'none',
-        };
-      default:
-        return {};
-    }
-  };
+  const handleMouseDown = useCallback(() => setPressed(true), []);
+  const handleMouseUp = useCallback(() => setPressed(false), []);
+  const handleMouseLeave = useCallback(() => setPressed(false), []);
 
-  const getSizeStyles = () => {
-    switch (size) {
-      case 'sm': return { padding: '8px 16px', fontSize: '12px' };
-      case 'md': return { padding: '12px 24px', fontSize: '14px' };
-      case 'lg': return { padding: '16px 32px', fontSize: '16px' };
-      default: return {};
-    }
-  };
-
-  const styles = {
-    ...getVariantStyles(),
-    ...getSizeStyles(),
-    borderRadius: '8px',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    opacity: disabled ? 0.5 : 1,
-    transition: 'all 0.2s ease',
-    transform: isPressed ? 'scale(0.98)' : 'scale(1)',
-    boxShadow: isHovered && !disabled ? `0 4px 12px ${colors.primary}40` : 'none',
+  const isDisabled = disabled || loading;
+  
+  // High contrast override
+  const effectiveVariant = highContrast ? 'primary' : variant;
+  
+  const baseStyles: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
+    border: 'none',
+    borderRadius: '8px',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    fontWeight: 500,
+    cursor: isDisabled ? 'not-allowed' : 'pointer',
+    opacity: isDisabled ? 0.5 : 1,
+    width: fullWidth ? '100%' : 'auto',
+    transition: prefersReducedMotion ? 'none' : 'all 0.15s ease-out',
+    transform: pressed && !isDisabled ? 'scale(0.96)' : 'scale(1)',
+    outline: 'none',
+    position: 'relative',
+    overflow: 'hidden'
   };
 
+  const sizeStyles: Record<string, React.CSSProperties> = {
+    small: { padding: '8px 12px', fontSize: '14px', height: '32px' },
+    medium: { padding: '12px 16px', fontSize: '16px', height: '40px' },
+    large: { padding: '16px 24px', fontSize: '18px', height: '48px' }
+  };
+
+  const variantStyles: Record<string, React.CSSProperties> = {
+    primary: {
+      backgroundColor: colors.primary,
+      color: colors.onPrimary
+    },
+    secondary: {
+      backgroundColor: colors.surface,
+      color: colors.onSurface,
+      border: `1px solid ${colors.onSurfaceVariant}`
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+      color: colors.primary
+    },
+    danger: {
+      backgroundColor: colors.error,
+      color: '#FFFFFF'
+    }
+  };
+
+  const combinedStyles: React.CSSProperties = {
+    ...baseStyles,
+    ...sizeStyles[size],
+    ...variantStyles[effectiveVariant]
+  };
+
+  // Focus ring styles
+  const focusStyles = `
+    .bx3-button:focus-visible::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 10px;
+      border: 2px solid ${colors.primary};
+      pointer-events: none;
+    }
+  `;
+
   return (
-    <button
-      style={styles}
-      disabled={disabled || loading}
-      onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onMouseDown={() => setIsPressed(true)}
-      onMouseUp={() => setIsPressed(false)}
-      {...props}
-    >
-      {loading && <BX3LoadingSpinner size="sm" />}
-      {children}
-    </button>
+    <>
+      <style>{focusStyles}</style>
+      <button
+        type={type}
+        onClick={onClick}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        disabled={isDisabled}
+        aria-label={ariaLabel}
+        aria-busy={loading}
+        className={`bx3-button ${className}`}
+        style={combinedStyles}
+        data-variant={variant}
+        data-size={size}
+        data-theme={theme}
+      >
+        {loading && (
+          <span 
+            className="bx3-spinner" 
+            style={{
+              width: size === 'small' ? 14 : size === 'medium' ? 16 : 20,
+              height: size === 'small' ? 14 : size === 'medium' ? 16 : 20,
+              border: `2px solid ${variant === 'primary' || variant === 'danger' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)'}`,
+              borderTopColor: variant === 'primary' || variant === 'danger' ? '#FFFFFF' : colors.primary,
+              borderRadius: '50%',
+              animation: prefersReducedMotion ? 'none' : 'bx3-spin 0.8s linear infinite'
+            }}
+          />
+        )}
+        {children}
+      </button>
+    </>
   );
 };
+
+// Keyframes injection
+const spinnerStyles = `
+  @keyframes bx3-spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = spinnerStyles;
+  document.head.appendChild(style);
+}

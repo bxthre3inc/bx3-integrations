@@ -1,26 +1,94 @@
 {
   "name": "@bxthre3/bx3-react",
   "version": "1.0.0",
-  "description": "BX3 Design System for React",
+  "description": "BX3 Design System for React - Premium UI components with AI-first design and accessibility",
   "main": "dist/index.js",
+  "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
   "scripts": {
-    "build": "tsc && rollup -c",
+    "build": "rollup -c",
+    "build-storybook": "storybook build",
+    "dev": "rollup -c -w",
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:a11y": "jest --testPathPattern=a11y",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "type-check": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "analyze-bundle": "npm run build && npx bundlesize",
+    "prepublishOnly": "npm run build && npm test"
   },
-  "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
-  },
-  "dependencies": {
-    "@bxthre3/bx3-core": "^1.0.0"
-  },
+  "keywords": [
+    "design-system",
+    "react",
+    "ui-components",
+    "accessibility",
+    "a11y",
+    "wcag",
+    "bx3",
+    "bxthre3"
+  ],
+  "author": "Bxthre3 Inc <engineering@bxthre3inc.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/bxthre3inc/bx3-integrations.git",
-    "directory": "packages/react"
+    "directory": "react"
+  },
+  "bugs": {
+    "url": "https://github.com/bxthre3inc/bx3-integrations/issues"
+  },
+  "homepage": "https://bx3.bxthre3inc.com",
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^1.0.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@storybook/addon-a11y": "^8.0.0",
+    "@storybook/addon-essentials": "^8.0.0",
+    "@storybook/react": "^8.0.0",
+    "@storybook/react-webpack5": "^8.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.0.0",
+    "@types/jest": "^29.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "bundlesize": "^0.18.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-react": "^7.0.0",
+    "eslint-plugin-react-hooks": "^4.0.0",
+    "jest": "^29.0.0",
+    "jest-environment-jsdom": "^29.0.0",
+    "rollup": "^4.0.0",
+    "rollup-plugin-dts": "^6.0.0",
+    "rollup-plugin-peer-deps-external": "^2.0.0",
+    "storybook": "^8.0.0",
+    "ts-jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "bundlesize": [
+    {
+      "path": "./dist/index.js",
+      "maxSize": "50kb",
+      "compression": "gzip"
+    }
+  ],
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
