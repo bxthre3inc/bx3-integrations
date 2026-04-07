@@ -2,35 +2,39 @@
   "name": "@bxthre3/bx3-vue",
   "version": "1.0.0",
   "description": "BX3 Design System for Vue 3",
-  "main": "dist/bx3-vue.umd.js",
+  "main": "dist/bx3-vue.cjs.js",
   "module": "dist/bx3-vue.esm.js",
-  "types": "dist/types/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
   "scripts": {
-    "build": "vue-tsc && vite build",
-    "test": "vitest",
+    "build": "vite build && vue-tsc --emitDeclarationOnly",
+    "test": "vitest run",
+    "test:ui": "vitest --ui",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
   "peerDependencies": {
-    "vue": "^3.0.0"
-  },
-  "dependencies": {
-    "@bxthre3/bx3-core": "^1.0.0"
+    "vue": "^3.3.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.0.0",
-    "typescript": "^5.0.0",
-    "vite": "^4.0.0",
+    "@storybook/addon-essentials": "^7.6.0",
+    "@storybook/vue3": "^7.6.0",
+    "@storybook/vue3-vite": "^7.6.0",
+    "@vitejs/plugin-vue": "^4.5.0",
+    "@vitest/ui": "^1.0.0",
+    "jsdom": "^23.0.0",
+    "storybook": "^7.6.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0",
     "vue": "^3.3.0",
     "vue-tsc": "^1.8.0"
   },
+  "keywords": ["vue", "vue3", "design-system", "ui", "components"],
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/bxthre3inc/bx3-integrations.git",
-    "directory": "packages/vue"
+    "directory": "vue"
   }
 }

@@ -1,75 +1,52 @@
 //! BX3 Design System - High-performance Rust implementation
 //! 
-//! Zero-allocation, GPU-accelerated UI components with
-//! runtime theme switching and accessibility detection.
+//! Zero-allocation color system with Oklab perceptual uniformity,
+//! cross-platform accessibility detection, and GPU-accelerated rendering.
 
-#![warn(missing_docs)]
-#![deny(unsafe_code)]
+#![cfg_attr(not(feature = "std"), no_std)]
 
-use std::sync::Arc;
-use once_cell::sync::Lazy;
-use parking_lot::RwLock;
-
-pub mod theme;
 pub mod color;
-pub mod typography;
 pub mod accessibility;
-pub mod components;
-pub mod rendering;
+pub mod theme;
+pub mod render;
 
-pub use theme::{Theme, ThemeVariant};
-pub use color::Color;
-pub use accessibility::{AccessibilityPreferences, AccessibilityManager};
+// Re-export commonly used items
+pub use color::{BX3Color, brand};
+pub use accessibility::{AccessibilityState, AnimationConfig, Accessible};
+pub use theme::BX3Theme;
 
-/// Global theme singleton (thread-safe)
-pub static THEME: Lazy<Arc<RwLock<Theme>>> = Lazy::new(|| {
-    Arc::new(RwLock::new(Theme::default()))
-});
-
-/// Access the current theme
-pub fn theme() -> Arc<RwLock<Theme>> {
-    THEME.clone()
+/// Check contrast ratio between two hex colors (CLI helper)
+pub fn check_contrast_hex(hex1: &str, hex2: &str) -> Result<f32, color::ColorError> {
+    let c1 = BX3Color::from_hex(hex1)?;
+    let c2 = BX3Color::from_hex(hex2)?;
+    Ok(c1.contrast_with(&c2))
 }
 
-/// Switch theme variant at runtime
-pub fn set_theme(variant: ThemeVariant) {
-    let mut theme = THEME.write();
-    theme.set_variant(variant);
+/// Check WCAG compliance (CLI helper)
+pub fn check_wcag_aa(hex1: &str, hex2: &str, is_large: bool) -> Result<bool, color::ColorError> {
+    let c1 = BX3Color::from_hex(hex1)?;
+    let c2 = BX3Color::from_hex(hex2)?;
+    Ok(c1.meets_aa(&c2, is_large))
 }
 
-/// Get current theme variant
-pub fn current_variant() -> ThemeVariant {
-    THEME.read().variant()
-}
-
-/// Check if system prefers reduced motion
-pub fn prefers_reduced_motion() -> bool {
-    AccessibilityManager::global().prefers_reduced_motion()
-}
-
-/// Check if system uses high contrast
-pub fn prefers_high_contrast() -> bool {
-    AccessibilityManager::global().prefers_high_contrast()
+/// Check WCAG AAA compliance (CLI helper)
+pub fn check_wcag_aaa(hex1: &str, hex2: &str, is_large: bool) -> Result<bool, color::ColorError> {
+    let c1 = BX3Color::from_hex(hex1)?;
+    let c2 = BX3Color::from_hex(hex2)?;
+    Ok(c1.meets_aaa(&c2, is_large))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    
     #[test]
-    fn test_theme_switching() {
-        set_theme(ThemeVariant::AgentOS);
-        assert_eq!(current_variant(), ThemeVariant::AgentOS);
+    fn test_cli_helpers() {
+        // White on black
+        let ratio = check_contrast_hex("#FFFFFF", "#000000").unwrap();
+        assert!(ratio > 20.0);
         
-        set_theme(ThemeVariant::ZoSpace);
-        assert_eq!(current_variant(), ThemeVariant::ZoSpace);
-    }
-
-    #[test]
-    fn test_color_parsing() {
-        let color = Color::from_hex("#7B1FA2").unwrap();
-        assert_eq!(color.r, 123);
-        assert_eq!(color.g, 31);
-        assert_eq!(color.b, 162);
+        assert!(check_wcag_aa("#FFFFFF", "#000000", false).unwrap());
+        assert!(check_wcag_aaa("#FFFFFF", "#000000", false).unwrap());
     }
 }

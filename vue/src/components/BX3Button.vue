@@ -1,101 +1,65 @@
 <template>
   <button
-    :class="[
-      'bx3-button',
-      `bx3-button--${variant}`,
-      `bx3-button--${size}`,
-      {
-        'bx3-button--loading': loading,
-        'bx3-button--disabled': disabled,
-        'bx3-button--hovered': isHovered,
-        'bx3-button--pressed': isPressed,
-      },
-    ]"
+    :class="buttonClasses"
     :disabled="disabled || loading"
     @click="handleClick"
-    @mouseenter="isHovered = true"
-    @mouseleave="isHovered = false"
-    @mousedown="isPressed = true"
-    @mouseup="isPressed = false"
+    @keydown.enter.space="handleClick"
   >
-    <BX3LoadingSpinner v-if="loading" size="sm" />
-    <slot />
+    <span v-if="loading" class="bx3-button__spinner" aria-hidden="true" />
+    <span :class="{ 'bx3-button__text--invisible': loading }">
+      <slot />
+    </span>
   </button>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import { useBX3Theme } from '../composables/useBX3Theme';
-import BX3LoadingSpinner from './BX3LoadingSpinner.vue';
-import type { BX3ButtonVariant, BX3ButtonSize } from '../types';
+import { useAccessibility } from '../composables/useAccessibility';
 
-interface Props {
-  variant?: BX3ButtonVariant;
-  size?: BX3ButtonSize;
-  loading?: boolean;
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonSize = 'small' | 'medium' | 'large';
+
+export interface BX3ButtonProps {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   disabled?: boolean;
+  loading?: boolean;
+  fullWidth?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<BX3ButtonProps>(), {
   variant: 'primary',
-  size: 'md',
-  loading: false,
+  size: 'medium',
   disabled: false,
+  loading: false,
+  fullWidth: false,
 });
 
 const emit = defineEmits<{
   click: [event: MouseEvent];
 }>();
 
-const { colors, prefersReducedMotion } = useBX3Theme();
+const { colors, reduceMotion } = useBX3Theme();
+const { screenReaderEnabled } = useAccessibility();
 
-const isHovered = ref(false);
-const isPressed = ref(false);
+const buttonClasses = computed(() => [
+  'bx3-button',
+  `bx3-button--${props.variant}`,
+  `bx3-button--${props.size}`,
+  {
+    'bx3-button--disabled': props.disabled || props.loading,
+    'bx3-button--loading': props.loading,
+    'bx3-button--full-width': props.fullWidth,
+    'bx3-button--screen-reader': screenReaderEnabled.value,
+  },
+]);
 
 const handleClick = (event: MouseEvent) => {
   if (!props.disabled && !props.loading) {
     emit('click', event);
   }
 };
-
-const buttonStyles = computed(() => {
-  const baseStyles = {
-    borderRadius: '8px',
-    cursor: props.disabled ? 'not-allowed' : 'pointer',
-    opacity: props.disabled ? 0.5 : 1,
-    transition: prefersReducedMotion.value ? 'none' : 'all 0.2s ease',
-  };
-
-  const variantStyles = {
-    primary: {
-      background: colors.value.primary,
-      color: colors.value.onPrimary,
-      border: 'none',
-    },
-    secondary: {
-      background: colors.value.surface,
-      color: colors.value.onSurface,
-      border: `1px solid ${colors.value.onSurfaceVariant}`,
-    },
-    ghost: {
-      background: 'transparent',
-      color: colors.value.onSurface,
-      border: 'none',
-    },
-  };
-
-  const sizeStyles = {
-    sm: { padding: '8px 16px', fontSize: '12px' },
-    md: { padding: '12px 24px', fontSize: '14px' },
-    lg: { padding: '16px 32px', fontSize: '16px' },
-  };
-
-  return {
-    ...baseStyles,
-    ...variantStyles[props.variant],
-    ...sizeStyles[props.size],
-  };
-});
 </script>
 
 <style scoped>
@@ -104,21 +68,87 @@ const buttonStyles = computed(() => {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-family: inherit;
-  font-weight: 500;
   border: none;
-  outline: none;
+  border-radius: 8px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.bx3-button--hovered:not(.bx3-button--disabled) {
-  box-shadow: 0 4px 12px rgba(123, 31, 162, 0.25);
+.bx3-button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
-.bx3-button--pressed:not(.bx3-button--disabled) {
-  transform: scale(0.98);
+.bx3-button--small {
+  padding: 8px 12px;
+  font-size: 14px;
+  min-height: 32px;
 }
 
-.bx3-button--loading {
-  cursor: wait;
+.bx3-button--medium {
+  padding: 12px 16px;
+  font-size: 16px;
+  min-height: 40px;
+}
+
+.bx3-button--large {
+  padding: 16px 24px;
+  font-size: 18px;
+  min-height: 48px;
+}
+
+.bx3-button--primary {
+  background: v-bind('colors.primary');
+  color: v-bind('colors.onPrimary');
+}
+
+.bx3-button--secondary {
+  background: v-bind('colors.surface');
+  color: v-bind('colors.onSurface');
+  border: 1px solid v-bind('colors.surfaceVariant');
+}
+
+.bx3-button--ghost {
+  background: transparent;
+  color: v-bind('colors.primary');
+}
+
+.bx3-button--danger {
+  background: v-bind('colors.error');
+  color: v-bind('colors.onPrimary');
+}
+
+.bx3-button--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bx3-button--full-width {
+  width: 100%;
+}
+
+.bx3-button--screen-reader {
+  min-height: 44px;
+}
+
+.bx3-button__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.bx3-button__text--invisible {
+  opacity: 0;
 }
 </style>

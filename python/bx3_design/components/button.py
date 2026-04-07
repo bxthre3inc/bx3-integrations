@@ -1,359 +1,201 @@
-"""BX3 Button component with multiple backend support."""
+"""BX3 Button component with multiple GUI backend support"""
+from __future__ import annotations
+import tkinter as tk
+from tkinter import ttk
+from typing import Callable, Optional, Literal
+from ..theme import BX3Theme, BX3Colors
+from ..utils import check_contrast_ratio
 
-from abc import ABC, abstractmethod
-from typing import Optional, Callable, Any
-from enum import Enum
-import warnings
-
-from bx3_design.theme import BX3Theme
-
-
-class BX3ButtonVariant(Enum):
-    PRIMARY = "primary"
-    SECONDARY = "secondary"
-    TERTIARY = "tertiary"
-    GHOST = "ghost"
-    DESTRUCTIVE = "destructive"
-
-
-class BX3ButtonSize(Enum):
-    SMALL = "sm"
-    MEDIUM = "md"
-    LARGE = "lg"
-
-
-class BX3ButtonBackend(ABC):
-    """Abstract base for button backends."""
-    
-    @abstractmethod
-    def create(self, parent: Any, text: str, callback: Callable, 
-               variant: BX3ButtonVariant, size: BX3ButtonSize, 
-               theme: BX3Theme, disabled: bool) -> Any:
-        """Create button widget."""
-        pass
-    
-    @abstractmethod
-    def update_theme(self, button: Any, theme: BX3Theme):
-        """Update button styling for new theme."""
-        pass
-
-
-class TkinterBackend(BX3ButtonBackend):
-    """Tkinter backend for BX3Button."""
-    
-    def create(self, parent, text: str, callback: Callable,
-               variant: BX3ButtonVariant, size: BX3ButtonSize,
-               theme: BX3Theme, disabled: bool) -> Any:
-        import tkinter as tk
-        from tkinter import ttk
-        
-        colors = theme.colors
-        
-        # Style mapping
-        bg_colors = {
-            BX3ButtonVariant.PRIMARY: colors.primary,
-            BX3ButtonVariant.SECONDARY: colors.secondary,
-            BX3ButtonVariant.TERTIARY: colors.surface_variant,
-            BX3ButtonVariant.GHOST: colors.background,
-            BX3ButtonVariant.DESTRUCTIVE: colors.error,
-        }
-        
-        fg_colors = {
-            BX3ButtonVariant.PRIMARY: colors.on_primary,
-            BX3ButtonVariant.SECONDARY: colors.on_secondary,
-            BX3ButtonVariant.TERTIARY: colors.on_surface,
-            BX3ButtonVariant.GHOST: colors.primary,
-            BX3ButtonVariant.DESTRUCTIVE: "#FFFFFF",
-        }
-        
-        # Size mapping
-        paddings = {
-            BX3ButtonSize.SMALL: (8, 4),
-            BX3ButtonSize.MEDIUM: (16, 8),
-            BX3ButtonSize.LARGE: (24, 12),
-        }
-        
-        btn = tk.Button(
-            parent,
-            text=text,
-            command=callback if not disabled else None,
-            bg=bg_colors[variant],
-            fg=fg_colors[variant],
-            activebackground=colors.primary_container,
-            activeforeground=colors.on_primary_container,
-            disabledforeground=colors.on_surface_variant,
-            cursor="hand2" if not disabled else "",
-            state="disabled" if disabled else "normal",
-            padx=paddings[size][0],
-            pady=paddings[size][1],
-            relief=tk.FLAT,
-            borderwidth=0,
-        )
-        
-        return btn
-    
-    def update_theme(self, button, theme: BX3Theme):
-        """Update Tkinter button colors."""
-        colors = theme.colors
-        button.configure(
-            bg=colors.primary,
-            fg=colors.on_primary,
-            activebackground=colors.primary_container,
-            activeforeground=colors.on_primary_container,
-        )
-
-
-class QtBackend(BX3ButtonBackend):
-    """PyQt6/PySide6 backend for BX3Button."""
-    
-    def create(self, parent, text: str, callback: Callable,
-               variant: BX3ButtonVariant, size: BX3ButtonSize,
-               theme: BX3Theme, disabled: bool) -> Any:
-        try:
-            from PyQt6.QtWidgets import QPushButton
-            from PyQt6.QtCore import Qt
-            from PyQt6.QtGui import QColor, QPalette
-        except ImportError:
-            from PySide6.QtWidgets import QPushButton
-            from PySide6.QtCore import Qt
-            from PySide6.QtGui import QColor, QPalette
-        
-        btn = QPushButton(text, parent)
-        btn.clicked.connect(callback)
-        btn.setEnabled(not disabled)
-        
-        # Apply styling
-        self._apply_style(btn, variant, size, theme)
-        
-        return btn
-    
-    def _apply_style(self, button, variant: BX3ButtonVariant, 
-                     size: BX3ButtonSize, theme: BX3Theme):
-        """Apply QSS stylesheet."""
-        colors = theme.colors
-        
-        bg_map = {
-            BX3ButtonVariant.PRIMARY: colors.primary,
-            BX3ButtonVariant.SECONDARY: colors.secondary,
-            BX3ButtonVariant.TERTIARY: colors.surface_variant,
-            BX3ButtonVariant.GHOST: "transparent",
-            BX3ButtonVariant.DESTRUCTIVE: colors.error,
-        }
-        
-        fg_map = {
-            BX3ButtonVariant.PRIMARY: colors.on_primary,
-            BX3ButtonVariant.SECONDARY: colors.on_secondary,
-            BX3ButtonVariant.TERTIARY: colors.on_surface,
-            BX3ButtonVariant.GHOST: colors.primary,
-            BX3ButtonVariant.DESTRUCTIVE: "#FFFFFF",
-        }
-        
-        height_map = {
-            BX3ButtonSize.SMALL: 32,
-            BX3ButtonSize.MEDIUM: 40,
-            BX3ButtonSize.LARGE: 48,
-        }
-        
-        style = f"""
-            QPushButton {{
-                background-color: {bg_map[variant]};
-                color: {fg_map[variant]};
-                border: none;
-                border-radius: 8px;
-                padding: 8px 16px;
-                min-height: {height_map[size]}px;
-                font-weight: 500;
-            }}
-            QPushButton:hover {{
-                background-color: {colors.primary_container};
-            }}
-            QPushButton:pressed {{
-                background-color: {colors.on_primary_container};
-            }}
-            QPushButton:disabled {{
-                background-color: {colors.surface_variant};
-                color: {colors.on_surface_variant};
-            }}
-        """
-        button.setStyleSheet(style)
-    
-    def update_theme(self, button, theme: BX3Theme):
-        """Reapply stylesheet with new theme."""
-        # Extract current variant from object property
-        variant = getattr(button, '_bx3_variant', BX3ButtonVariant.PRIMARY)
-        size = getattr(button, '_bx3_size', BX3ButtonSize.MEDIUM)
-        self._apply_style(button, variant, size, theme)
-
-
-class GTKBackend(BX3ButtonBackend):
-    """GTK/PyGObject backend for BX3Button."""
-    
-    def create(self, parent, text: str, callback: Callable,
-               variant: BX3ButtonVariant, size: BX3ButtonSize,
-               theme: BX3Theme, disabled: bool) -> Any:
-        from gi.repository import Gtk, Gdk
-        
-        btn = Gtk.Button.new_with_label(text)
-        btn.connect("clicked", lambda _: callback())
-        btn.set_sensitive(not disabled)
-        
-        # Add CSS class
-        btn.get_style_context().add_class("bx3-button")
-        btn.get_style_context().add_class(f"bx3-button-{variant.value}")
-        btn.get_style_context().add_class(f"bx3-button-{size.value}")
-        
-        # Store references for theme updates
-        btn._bx3_variant = variant
-        btn._bx3_size = size
-        
-        return btn
-    
-    def update_theme(self, button, theme: BX3Theme):
-        """Update GTK button styling."""
-        # GTK uses CSS providers that should be updated at application level
-        pass
-
+Variant = Literal['primary', 'secondary', 'ghost', 'danger']
+Size = Literal['small', 'medium', 'large']
 
 class BX3Button:
-    """BX3 Button with automatic backend detection."""
+    """Cross-platform button supporting Tkinter, PyQt6, and GTK"""
     
-    _backends: dict = {}
-    
-    def __init__(self, text: str, callback: Optional[Callable] = None,
-                 variant: str = "primary", size: str = "md",
-                 theme: Optional[BX3Theme] = None, disabled: bool = False,
-                 parent: Any = None, backend: Optional[str] = None):
-        """
-        Create a BX3 button.
+    def __init__(
+        self,
+        parent,
+        text: str,
+        on_click: Optional[Callable] = None,
+        variant: Variant = 'primary',
+        size: Size = 'medium',
+        disabled: bool = False,
+        loading: bool = False,
+        full_width: bool = False,
+        theme: Optional[BX3Theme] = None
+    ):
+        self.text = text
+        self.on_click = on_click
+        self.variant = variant
+        self.size = size
+        self.disabled = disabled or loading
+        self.loading = loading
+        self.full_width = full_width
+        self.theme = theme or BX3Theme()
+        self.colors = self.theme.colors
+        self._widget = None
+        self._backend = self._detect_backend(parent)
         
-        Args:
-            text: Button label
-            callback: Function to call on click
-            variant: primary, secondary, tertiary, ghost, destructive
-            size: sm, md, lg
-            theme: BX3Theme instance (uses singleton if None)
-            disabled: Whether button is disabled
-            parent: Parent widget
-            backend: Force specific backend (tkinter, qt, gtk)
-        """
-        self._text = text
-        self._callback = callback or (lambda: None)
-        self._variant = BX3ButtonVariant(variant)
-        self._size = BX3ButtonSize(size)
-        self._theme = theme or BX3Theme()
-        self._disabled = disabled
-        self._parent = parent
-        self._backend_name = backend
-        self._widget: Any = None
-        self._backend: Optional[BX3ButtonBackend] = None
-        
-        # Auto-detect backend if not specified
-        self._detect_backend()
-        
-        # Create widget
-        if parent is not None:
-            self.create(parent)
-        
-        # Subscribe to theme changes
-        self._theme.add_observer(self._on_theme_change)
-    
-    def _detect_backend(self):
-        """Auto-detect best available backend."""
-        if self._backend_name:
-            backend_order = [self._backend_name]
+    def _detect_backend(self, parent) -> str:
+        """Auto-detect GUI framework from parent widget"""
+        module = type(parent).__module__
+        if 'PyQt6' in module or 'PySide6' in module:
+            return 'qt'
+        elif 'gi' in module:  # PyGObject
+            return 'gtk'
         else:
-            backend_order = ["qt", "gtk", "tkinter"]
-        
-        for name in backend_order:
-            if name == "qt":
-                try:
-                    import PyQt6 or PySide6  # noqa
-                    self._backend = QtBackend()
-                    self._backend_name = "qt"
-                    return
-                except ImportError:
-                    pass
-            elif name == "gtk":
-                try:
-                    from gi.repository import Gtk  # noqa
-                    self._backend = GTKBackend()
-                    self._backend_name = "gtk"
-                    return
-                except ImportError:
-                    pass
-            elif name == "tkinter":
-                try:
-                    import tkinter  # noqa
-                    self._backend = TkinterBackend()
-                    self._backend_name = "tkinter"
-                    return
-                except ImportError:
-                    pass
-        
-        raise RuntimeError("No supported GUI backend found")
+            return 'tkinter'  # Default
     
-    def create(self, parent) -> Any:
-        """Create the actual widget."""
-        self._parent = parent
-        self._widget = self._backend.create(
-            parent, self._text, self._callback,
-            self._variant, self._size,
-            self._theme, self._disabled
+    def create_tkinter(self, parent) -> tk.Widget:
+        """Create Tkinter button"""
+        from tkinter import Button
+        
+        bg, fg = self._get_colors()
+        
+        btn = Button(
+            parent,
+            text=self.text,
+            command=self._handle_click,
+            bg=bg,
+            fg=fg,
+            font=self._get_font(),
+            relief='flat',
+            cursor='hand2' if not self.disabled else '',
+            state='disabled' if self.disabled else 'normal'
         )
-        # Store variant/size for theme updates
-        self._widget._bx3_variant = self._variant
-        self._widget._bx3_size = self._size
+        
+        # Apply size
+        padding = {'small': (8, 4), 'medium': (12, 8), 'large': (16, 12)}[self.size]
+        btn.config(padx=padding[0], pady=padding[1])
+        
+        if self.full_width:
+            btn.config(width=parent.winfo_width())
+        
+        # Accessibility: keyboard navigation
+        btn.bind('<Return>', lambda e: self._handle_click())
+        btn.bind('<space>', lambda e: self._handle_click())
+        
+        self._widget = btn
+        return btn
+    
+    def create_qt(self, parent):
+        """Create PyQt6/PySide6 button"""
+        from PyQt6.QtWidgets import QPushButton, QSizePolicy
+        from PyQt6.QtGui import QFont, QColor, QPalette
+        from PyQt6.QtCore import Qt
+        
+        btn = QPushButton(self.text, parent)
+        btn.setEnabled(not self.disabled)
+        
+        # Styling
+        bg, fg = self._get_colors()
+        btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {bg};
+                color: {fg};
+                border: none;
+                border-radius: 8px;
+                padding: {'4px 8px' if self.size == 'small' else '8px 12px' if self.size == 'medium' else '12px 16px'};
+                font-weight: 500;
+            }}
+            QPushButton:hover:!disabled {{
+                opacity: 0.9;
+            }}
+            QPushButton:pressed {{
+                opacity: 0.8;
+            }}
+            QPushButton:focus {{
+                border: 2px solid {self.colors.onSurface};
+            }}
+            QPushButton:disabled {{
+                opacity: 0.5;
+            }}
+        """)
+        
+        btn.clicked.connect(self._handle_click)
+        
+        if self.full_width:
+            btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        
+        self._widget = btn
+        return btn
+    
+    def create_gtk(self, parent):
+        """Create GTK button via PyGObject"""
+        import gi
+        gi.require_version('Gtk', '4.0')
+        from gi.repository import Gtk, Gdk
+        
+        btn = Gtk.Button(label=self.text)
+        btn.set_sensitive(not self.disabled)
+        
+        # Size
+        if self.size == 'small':
+            btn.add_css_class('small')
+        elif self.size == 'large':
+            btn.add_css_class('large')
+        
+        # Styling via CSS
+        bg, fg = self._get_colors()
+        css = f"""
+            button {{
+                background: {bg};
+                color: {fg};
+                border-radius: 8px;
+                font-weight: 500;
+            }}
+        """
+        
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css.encode())
+        btn.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        
+        btn.connect('clicked', lambda _: self._handle_click())
+        
+        self._widget = btn
+        return btn
+    
+    def _get_colors(self) -> tuple[str, str]:
+        """Get background and foreground colors for current variant"""
+        c = self.colors
+        return {
+            'primary': (c.primary, c.on_primary),
+            'secondary': (c.surface, c.on_surface),
+            'ghost': ('transparent', c.primary),
+            'danger': (c.error, c.on_primary),
+        }[self.variant]
+    
+    def _get_font(self) -> tuple:
+        """Get font configuration for Tkinter"""
+        sizes = {'small': 12, 'medium': 14, 'large': 16}
+        return ('system-ui', sizes[self.size])
+    
+    def _handle_click(self):
+        """Handle button click event"""
+        if self.disabled or self.loading:
+            return
+        if self.on_click:
+            self.on_click()
+    
+    def render(self, parent) -> object:
+        """Render button using detected backend"""
+        if self._backend == 'qt':
+            return self.create_qt(parent)
+        elif self._backend == 'gtk':
+            return self.create_gtk(parent)
+        else:
+            return self.create_tkinter(parent)
+    
+    def set_loading(self, loading: bool):
+        """Update loading state"""
+        self.loading = loading
+        self.disabled = loading or self.disabled
+        if self._widget:
+            if self._backend == 'tkinter':
+                self._widget.config(text='Loading...' if loading else self.text)
+            elif self._backend == 'qt':
+                self._widget.setEnabled(not loading)
+    
+    @property
+    def widget(self):
         return self._widget
-    
-    def _on_theme_change(self, variant: str):
-        """Handle theme changes."""
-        if self._widget:
-            self._backend.update_theme(self._widget, self._theme)
-    
-    @property
-    def widget(self) -> Any:
-        """Get the underlying widget."""
-        return self._widget
-    
-    @property
-    def text(self) -> str:
-        return self._text
-    
-    @text.setter
-    def text(self, value: str):
-        self._text = value
-        if self._widget:
-            if self._backend_name == "tkinter":
-                self._widget.configure(text=value)
-            elif self._backend_name in ("qt",):
-                self._widget.setText(value)
-            elif self._backend_name == "gtk":
-                self._widget.set_label(value)
-    
-    @property
-    def disabled(self) -> bool:
-        return self._disabled
-    
-    @disabled.setter
-    def disabled(self, value: bool):
-        self._disabled = value
-        if self._widget:
-            if self._backend_name == "tkinter":
-                self._widget.configure(
-                    state="disabled" if value else "normal"
-                )
-            elif self._backend_name in ("qt",):
-                self._widget.setEnabled(not value)
-            elif self._backend_name == "gtk":
-                self._widget.set_sensitive(not value)
-    
-    def destroy(self):
-        """Clean up widget and remove theme observer."""
-        self._theme.remove_observer(self._on_theme_change)
-        if self._widget:
-            if self._backend_name == "tkinter":
-                self._widget.destroy()
-            elif self._backend_name in ("qt",):
-                self._widget.deleteLater()
-            elif self._backend_name == "gtk":
-                self._widget.destroy()
