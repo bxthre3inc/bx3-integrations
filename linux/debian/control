@@ -1,0 +1,12 @@
+Package: bx3-design-theme
+Version: 1.0.0
+Section: gnome
+Priority: optional
+Architecture: all
+Depends: gnome-shell (>= 40), gtk-3.0, libgtk-3-0
+Maintainer: Bxthre3 Inc <dev@bxthre3.com>
+Description: BX3 Design System - GTK Theme Package
+ Adaptive, accessible theme system for Linux desktops.
+ Supports AgentOS, Zo Space, VPC, and Irrig8 variants.
+ Features automatic accessibility detection and runtime switching.
+Homepage: https://github.com/bxthre3inc/bx3-integrations
